@@ -1,3 +1,6 @@
+if (process.platform==='linux'){
+    process.chdir('/home/roacho/fotomultasinstall/config')
+}
 const express = require('express');
 const session = require('express-session');
 const sqlite3=require('sqlite3').verbose();
