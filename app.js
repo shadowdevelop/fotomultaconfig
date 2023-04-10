@@ -85,19 +85,46 @@ app.get('/config',isAuthenticated,(req,res)=>{
     });
 });
 
-app.post('/update',isAuthenticated,(req,res)=>{
+app.post('/updateconfig',isAuthenticated,(req,res)=>{
     const {id,newValue}=req.body;
     const query ='update config set value = ? where id= ?';
     db.run(query,[newValue,id],function(err){
         if (err){
             return console.error(err.message);
         }
-        res.redirect('/');
+        res.redirect('/config');
+    });
+});
+
+app.get('/livecam',isAuthenticated,(req,res)=>{
+    const query ="Select * from config where id='ipcamara';"; 
+    db.get(query,(err,row)=>{
+        if (err){
+            console.error(err.message);
+            return;
+        }
+
+        res.render('livecam',{rowData:row});
+
+        
     });
 });
 
 app.get('/resetservice',isAuthenticated,(req,res)=>{
-
+    exec('pkill -f main.py',(error,stdout,stderr)=>{
+        if (error) {
+            console.error(`Error al cerrar el proceso: ${error}`);
+            return;
+          }
+          exec(`sudo ../fotomultas/start-sh`, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`Error al ejecutar el script: ${error}`);
+              return;
+            }
+            res.render("restart");
+            
+          });
+    });
 });
 
 const port=process.env.PORT ||  3000;

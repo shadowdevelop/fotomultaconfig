@@ -32,7 +32,7 @@
           <td><%= row.id %></td>                    
           <td><%= row.value %></td>
           <td>
-            <form action="/update" method="POST" class="d-inline"> 
+            <form action="/updateconfig" method="POST" class="d-inline"> 
               <input type="hidden" name="id" value="<%= row.id %>">
               <input type="text" name="newValue" placeholder="Nuevo valor">
               <button type="submit">Actualizar</button>
@@ -42,6 +42,6 @@
       <% }); %>
     </tbody>
     <div class="text-end">
-        <a href="/logout" class="btn btn-success">Aplicar Cambios</a><a href="/logout" class="btn btn-info">Ver Camara</a>
+        <a href="/logout" class="btn btn-success">Aplicar Cambios</a><a href="/livecam" class="btn btn-info">Ver Camara</a>
     </div>
 </body
