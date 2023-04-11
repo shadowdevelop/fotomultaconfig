@@ -111,20 +111,29 @@ app.get('/livecam',isAuthenticated,(req,res)=>{
 });
 
 app.get('/resetservice',isAuthenticated,(req,res)=>{
-    exec('pkill -f main.py',(error,stdout,stderr)=>{
+    exec(`sudo ../fotomultas/restart.sh`, (error, stdout, stderr) => {
         if (error) {
-            console.error(`Error al cerrar el proceso: ${error}`);
+            console.error(`Error al ejecutar el script: ${error}`);
             res.render("restart",{mensaje:error});
-          }
-          exec(`sudo ../fotomultas/start-sh`, (error, stdout, stderr) => {
-            if (error) {
-              console.error(`Error al ejecutar el script: ${error}`);
-              res.render("restart",{mensaje:error});
-            }
-            res.render("restart",{mensaje:'Servicio reiniciado'});
-            
-          });
+        }
+        res.render("restart",{mensaje:'Servicio reiniciado'});
+        
     });
+    
+    // exec('pkill -f main.py',(error,stdout,stderr)=>{
+    //     if (error) {
+    //         console.error(`Error al cerrar el proceso: ${error}`);
+    //         res.render("restart",{mensaje:error});
+    //       }
+    //       exec(`sudo ../fotomultas/start-sh`, (error, stdout, stderr) => {
+    //         if (error) {
+    //           console.error(`Error al ejecutar el script: ${error}`);
+    //           res.render("restart",{mensaje:error});
+    //         }
+    //         res.render("restart",{mensaje:'Servicio reiniciado'});
+            
+    //       });
+    // });
 });
 
 const port=process.env.PORT ||  3000;
