@@ -3,10 +3,15 @@ if (process.platform==='linux'){
 }
 const express = require('express');
 const session = require('express-session');
+const fileupload=require('express-fileupload');
+const AdmZip=require('adm-zip');
+const fs=require('fs');
 const sqlite3=require('sqlite3').verbose();
 const ejs=require('ejs');
 const bodyparser = require('body-parser');
 const { exec } = require("child_process");
+const { isatty } = require('tty');
+
 
 const app= express();
 const db=new sqlite3.Database('../fotomultas/config.db');
@@ -20,6 +25,9 @@ app.use(session({
     saveUninitialized:true,
     cookie:{maxAge:60000}
 }));
+app.use(fileupload());
+
+
 
 
 
@@ -55,8 +63,8 @@ app.post('/login',(req,res)=>{
         req.session.user={username,role:'viewer'};
         return res.redirect('/');
     }
-
-    res.status(401).send('Credenciales incorrectas');
+    res.render('login',{error:'Credenciales incorrectas'});
+    //res.status(401).send('Credenciales incorrectas');
 });
 
 app.get('/logout',(req,res)=>{
@@ -94,6 +102,64 @@ app.post('/updateconfig',isAuthenticated,(req,res)=>{
         }
         res.redirect('/config');
     });
+});
+
+app.get('/uploadlist',isAuthenticated,(req,res)=>{
+    const rutaarchivos='./versiones';
+    fs.readdir(rutaarchivos,(err,files)=>{
+        if (err){
+            return res.status(500).send(err);
+        }
+
+        const archivosZip = files.filter(file => file.endsWith('.zip'));  
+
+        res.render('uploadlist', { archivosZip }); 
+    });
+});
+
+app.post('/upload',(req,res)=>{
+    if (!req.files || Object.keys(req.files).length===0){
+        return res.status(400).send('No se ha seleccionado ningún archivo.');
+    }
+    const rutaarchivos='./versiones';
+    const archivo=req.files.archivo;
+    const nombreArchivo = archivo.name;
+    const rutaDestino = './versiones/' + nombreArchivo;
+
+
+    if (fs.existsSync(rutaDestino)){
+        fs.unlinkSync(rutaDestino);
+    }
+
+    if (fs.existsSync('./install')){
+        fs.rmSync('./install',{recursive:true});
+    }
+
+    fs.mkdirSync('./install');
+
+
+    archivo.mv(rutaDestino,(err)=>{
+        if(err){
+            return res.status(500).send(err);
+        }
+
+        const zip=new AdmZip(rutaDestino);
+
+        zip.extractAllTo('./install',true);
+
+        
+        fs.readdir(rutaarchivos,(err,files)=>{
+            if (err){
+                return res.status(500).send(err);
+            }
+    
+            const archivosZip = files.filter(file => file.endsWith('.zip'));  
+    
+            res.render('uploadlist', { archivosZip }); 
+        });
+
+    });
+
 });
 
 app.get('/livecam',isAuthenticated,(req,res)=>{

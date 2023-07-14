@@ -1,0 +1,57 @@
+<!-- views/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de control FotoMultas</title>
+  <!-- Agregar Bootstrap CSS -->
+  <link href="/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-2"><img src="/logo.jpg" alt="Logo" class="img-fluid mb-3" width="75px"> </div>
+      <div class="col-md-6"><h2>Panel de control FotoMultas</h2></div>
+      <div class="col-md-4 text-end"><a href="/logout" class="btn btn-secondary">Cerrar sesión</a></div>
+        
+    </div>
+    <div class="text-end">
+      <a href="/config" class="btn btn-info">Configurar</a>&nbsp;<a href="/reporte" class="btn btn-info">Ver Reporte</a>&nbsp;<a href="/uploadlist" class="btn btn-info">Versiones</a> 
+   </div>
+    <h1>Historial de Versiones</h1>
+    
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Version</th>          
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% archivosZip.forEach(archivo  => { %>
+        <tr>
+          <td><%= archivo  %></td>                    
+          <td>
+            <button class="btn btn-success" >Aplicar</button>
+          </td>
+        </tr>
+      <% }); %>
+      </tbody>
+    </table>
+    
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <div class="row">
+      <div class="mb-3 col-md-6">
+        
+        <input class="form-control" type="file" id="archivo" name="archivo" accept=".zip">        
+      </div>     
+      <div class=" col-md-6">
+        <button type="submit"class="btn btn-success">Subir Nueva Version</button> 
+        
+      </div> 
+    </div>
+    </form>
+    <script src="/jquery.js"></script>
+</body
