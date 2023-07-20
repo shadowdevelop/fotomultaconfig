@@ -1,0 +1,113 @@
+<!-- views/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de control FotoMultas</title>
+  <!-- Agregar Bootstrap CSS -->
+  <link href="/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/daterangepicker.css" />  
+
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-2"><img src="/logo.jpg" alt="Logo" class="img-fluid mb-3" width="75px"> </div>
+      <div class="col-md-6"><h2>Panel de control FotoMultas</h2></div>
+      <div class="col-md-4 text-end"><a href="/logout" class="btn btn-secondary">Cerrar sesión</a></div>
+        
+    </div>
+    <div class="text-end">
+      <a href="/config" class="btn btn-info">Configurar</a>&nbsp;<a href="/reporte" class="btn btn-info">Ver Reporte</a>&nbsp;<a href="/uploadlist" class="btn btn-info">Versiones</a> 
+   </div>
+    <h1>Historial de Versiones</h1>
+    <div class="form-group row">
+        <label for="dateRangePicker" class="col-sm-2 col-form-label">Rantgo de Fechas</label>
+        <div class="col-sm-6">
+            <input type="text" class="form-control"" id="dateRangePicker" name="dateRangePicker" />
+        </div>
+        <div class="col-sm-4">
+            <button class="btn btn-success" id="btnexport">Exportar</button>
+        </div>
+    </div>
+    <div id="result"></div>
+    <table class="table" id="tblArchivos">
+      <thead>
+        <tr>
+          <th>Equipo</th>          
+          <th>Fecha</th>
+          <th>Velocidad</th>
+          <th>Ver</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+    <div id="archivoResultado"></div>
+
+    </form>
+    <script src="/jquery.js"></script>
+    <script src="/moment.js"></script>
+    <script src="/daterangepicker.js"></script>
+    <script>
+
+        function buscarArchivo(nombreArchivo) {
+
+            var url = '/reporteimg/' + nombreArchivo;
+            window.open(url, '_blank');
+        }
+
+
+        $(function() {
+
+            $("#btnexport").click(function(){
+                var startDate =$('#dateRangePicker').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                var endDate =$('#dateRangePicker').data('daterangepicker').endDate.format('YYYY-MM-DD');                 
+                var url = '/descargarReporte/' + startDate + '/' + endDate;
+                window.open(url, '_blank');
+                var url = '/descargarImagenes/' + startDate + '/' + endDate;
+                window.open(url, '_blank');
+            });
+
+
+          $('#dateRangePicker').daterangepicker({
+            locale: {
+              format: 'YYYY-MM-DD'
+            }
+          });
+    
+          $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+            var startDate = picker.startDate.format('YYYY-MM-DD');
+            var endDate = picker.endDate.format('YYYY-MM-DD');
+    
+            $.ajax({
+              url: '/reportelist/' + startDate + '/' + endDate,
+              type: 'GET',
+              dataType: 'json',
+              success: function(data) {
+                var result = $('#tblArchivos tbody');
+                result.empty();
+    
+                if (data.length === 0) {
+                  result.text('No se encontraron registros en las fechas seleccionadas.');
+                } else {
+                  for (var i = 0; i < data.length; i++) {
+                    var record = data[i];
+                    
+                    result.append('<tr><td>'+ record.equipo+'</td><td>'+ record.fecha+'</td><td>'+ record.velocidad+'</td><td> <a href="#" onclick=javascript:buscarArchivo("'+ record.archivo+'") >'+ record.archivo+'</a></td></tr>');
+                  }
+                }
+              },
+              error: function() {
+                var result = $('#tblArchivos tbody');
+                result.empty();
+                result.text('Error en la solicitud.');
+              }
+            });
+          });
+        });
+      </script>
+</body

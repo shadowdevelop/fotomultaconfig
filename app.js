@@ -11,10 +11,16 @@ const ejs=require('ejs');
 const bodyparser = require('body-parser');
 const { exec } = require("child_process");
 const { isatty } = require('tty');
-
+const path = require('path');
+const archiver = require('archiver');
 
 const app= express();
 const db=new sqlite3.Database('../fotomultas/config.db');
+const dbreporte=new sqlite3.Database('../fotomultas/reporte.db');
+const mime = require('mime');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
+
 
 app.set('view engine','ejs');
 app.use(express.static('public'));
@@ -161,6 +167,145 @@ app.post('/upload',(req,res)=>{
     });
 
 });
+
+app.get('/reporte',isAuthenticated,(req,res)=>{
+    res.render('reporte');
+});
+
+
+app.get('/reportelist/:startDate/:endDate',isAuthenticated,(req,res)=>{
+    const startDate=new Date(req.params.startDate);
+    const endDate=new Date(req.params.endDate);
+    const query ='Select equipo,fecha,velocidad,archivo from reporte where fecha between ? and ?;';    
+    dbreporte.all(query,[startDate.toISOString(), endDate.toISOString()],(err,rows)=>{
+        if (err) {
+            console.error(err.message);
+            res.statusCode = 500;
+            res.end('Error en la consulta');
+          } else {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            //console.log(JSON.stringify(rows));
+            res.end(JSON.stringify(rows));
+          }
+        //res.render('config',{rows});
+    });
+});
+
+app.get('/descargarReporte/:startDate/:endDate',isAuthenticated, (req, res) => {
+    const startDate = new Date(req.params.startDate);
+    const endDate = new Date(req.params.endDate);
+  
+    
+        const query = `SELECT equipo,fecha,velocidad,archivo from reporte WHERE fecha BETWEEN ? AND ?`;
+        dbreporte.all(query, [startDate.toISOString(), endDate.toISOString()], (err, rows) => {
+          if (err) {
+            console.error(err.message);
+            res.statusCode = 500;
+            res.end('Error en la consulta');
+          } else {
+            const csvWriter = createCsvWriter({
+              path: 'reporte.csv',
+              header: [
+                { id: 'equipo', title: 'Equipo' },
+                { id: 'fecha', title: 'Fecha' },
+                { id: 'velocidad', title: 'Velocidad' },
+                { id: 'archivo', title: 'Nombre Archivo' }
+              ]
+            });
+  
+            csvWriter.writeRecords(rows)
+              .then(() => {
+                console.log('Archivo CSV generado correctamente');
+                res.download('reporte.csv', () => {
+                  fs.unlink('reporte.csv', (err) => {
+                    if (err) {
+                      console.error('Error al eliminar el archivo CSV:', err);
+                    }
+                  });
+                });
+              })
+              .catch((error) => {
+                console.error('Error al generar el archivo CSV:', error);
+                res.statusCode = 500;
+                res.end('Error al generar el archivo CSV');
+              });
+          }
+        });      
+  });
+
+  app.get('/descargarImagenes/:startDate/:endDate',isAuthenticated,(req,res)=>{
+    const startDate = new Date(req.params.startDate);
+    const endDate = new Date(req.params.endDate);
+  
+    
+        const query = `SELECT equipo,fecha,velocidad,archivo from reporte WHERE fecha BETWEEN ? AND ?`;
+        dbreporte.all(query, [startDate.toISOString(), endDate.toISOString()],(err,rows)=>{
+            if (err) {
+                console.error(err.message);
+                res.statusCode = 500;
+                res.end('Error en la consulta');
+              }else{
+                const rutaCarpeta='../fotomultas/reporte';
+                const nombreArchivoZip='archivo.zip';
+
+                const salida = fs.createWriteStream(nombreArchivoZip);
+                const archivoZip = archiver('zip');
+
+                salida.on('close', () => {
+                    console.log('El archivo comprimido se ha creado correctamente.');
+                    res.download(nombreArchivoZip, (err) => {
+                    if (err) {
+                        console.error('Error al descargar el archivo comprimido:', err);
+                    }
+                    fs.unlink(nombreArchivoZip, (err) => {
+                        if (err) {
+                        console.error('Error al eliminar el archivo comprimido:', err);
+                        }
+                    });
+                    });
+                }); 
+
+                archivoZip.pipe(salida);
+                for (const row of rows) {
+                  const archivo = path.join(rutaCarpeta, row.archivo);
+                  console.log(archivo);
+                  archivoZip.file(archivo, { name: row.archivo });
+                }
+                archivoZip.finalize();
+
+
+              }
+        });
+  });
+
+app.get('/reporteimg/:nombreArchivo',isAuthenticated,(req,res)=>{
+    const nombreArchivo = req.params.nombreArchivo;
+    let rutaCarpeta = 'E:/Trabajos/BlueNet/FotoMultas/reporte';
+
+  const rutaArchivo = path.join(rutaCarpeta, nombreArchivo);
+
+  if (fs.existsSync(rutaArchivo)) {
+    const mimeType = mime.getType(rutaArchivo);
+    res.setHeader('Content-Type', mimeType);
+    res.sendFile(rutaArchivo, (err) => {
+      if (err) {
+        console.error('Error al enviar el archivo:', err);
+        res.statusCode = 500;
+        res.end('Error al enviar el archivo');
+      } else {
+        console.log('Archivo enviado:', rutaArchivo);
+      }
+    });
+  } else {
+    console.error('Archivo no encontrado:', rutaArchivo);
+    res.statusCode = 404;
+    res.end('Archivo no encontrado');
+  }
+
+
+});
+
 
 app.get('/livecam',isAuthenticated,(req,res)=>{
     const query ="Select * from config where id='ipcamara';"; 
