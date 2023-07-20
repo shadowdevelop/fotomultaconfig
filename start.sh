@@ -1,0 +1,1 @@
+sudo node /home/roacho/fotomultasinstall/config/app.js
