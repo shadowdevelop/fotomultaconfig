@@ -287,7 +287,9 @@ app.get('/descargarReporte/:startDate/:endDate',isAuthenticated, (req, res) => {
 
 app.get('/reporteimg/:nombreArchivo',isAuthenticated,(req,res)=>{
     const nombreArchivo = req.params.nombreArchivo;
-    let rutaCarpeta = 'E:/Trabajos/BlueNet/FotoMultas/reporte';
+    //let rutaCarpeta = 'E:/Trabajos/BlueNet/FotoMultas/reporte';
+    let rutaCarpeta = '/home/roacho/fotomultasinstall/fotomultas/reporte';
+    
 
   const rutaArchivo = path.join(rutaCarpeta, nombreArchivo);
 
