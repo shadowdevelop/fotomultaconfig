@@ -19,7 +19,7 @@ const db=new sqlite3.Database('../fotomultas/config.db');
 const dbreporte=new sqlite3.Database('../fotomultas/reporte.db');
 const mime = require('mime');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-
+const child_process = require('child_process');
 
 
 app.set('view engine','ejs');
@@ -153,6 +153,12 @@ app.post('/upload',(req,res)=>{
 
         zip.extractAllTo('./install',true);
 
+
+        const installScriptPath = './install/install.sh';
+        if (fs.existsSync(installScriptPath)) {
+            const child = child_process.spawn('sh', [installScriptPath], { detached: true });
+            child.unref();
+        }
         
         fs.readdir(rutaarchivos,(err,files)=>{
             if (err){
