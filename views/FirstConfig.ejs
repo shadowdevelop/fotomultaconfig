@@ -1,0 +1,66 @@
+<!-- views/login.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión</title>
+  <link href="/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <div class="text-center">
+          <!-- Agregar la imagen del logo aquí -->
+          <img src="/logo.jpg" alt="Logo" class="img-fluid mb-3" width="75px">
+          <h1>Configuración Inicial</h1>
+        </div>
+        <hr/>
+        <br/>
+        <br/>
+        <div class="text-right">
+            <h3>Datos de Usuario</h3>
+          </div>
+        <form action="/first-config" method="POST">
+          <div class="mb-3">
+            <label for="username" class="form-label">Nombre de usuario:</label>
+            <input type="text" name="username" id="username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña:</label>
+            <input type="password" name="password" id="password" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Confirmar Contraseña:</label>
+            <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" required>
+          </div>
+          <br/>
+          <div class="text-right">
+            <h3>Parámetros Iniciales</h3>
+          </div>
+          <div class="mb-3">
+            <label for="velocidadLimite" class="form-label">Velocidad Límite:</label>
+            <input type="number" name="velocidadLimite" id="velocidadLimite" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="correos" class="form-label">Lista de Correos para Alertas (separados por punto y coma):</label>
+            <input type="text" name="correos" id="correos" class="form-control" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+        <% if (typeof error !== 'undefined') { %>
+          <div class="alert alert-danger" role="alert"><%= error %></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script src="/popper.min.js"></script>
+  <script src="/bootstrap.min.js"></script>
+  <script src="/jquery.js"></script>
+</body>
+</html>

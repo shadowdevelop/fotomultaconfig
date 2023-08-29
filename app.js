@@ -34,7 +34,7 @@ app.use(session({
 app.use(fileupload());
 
 
-
+ 
 
 
 function isAuthenticated(req,res,next){
@@ -48,12 +48,56 @@ function isAuthenticated(req,res,next){
         return next();
         
     }
-    res.redirect('/login');
+    else{
+        const query ='SELECT PrimeraVez FROM AppConfig;';
+        db.get(query,[],(err,row)=>{
+            if(err){
+                throw err;
+            }
+
+            if(row.PrimeraVez===0)
+            {
+                res.redirect('/first-config');
+            }
+            else
+            {
+                res.redirect('/login');
+            }
+        });
+    }
 }
 
 // function restartPythonService(){
 //     const python_Service="main.py"
 // }
+app.get('/first-config',(req,res)=>{
+    res.render('FirstConfig');
+});
+
+app.post('/first-config',(req,res)=>{
+
+    const {username,password,confirmPassword,velocidadLimite,correos}=req.body;
+    
+    if (username==='admin')
+        return res.render('FirstConfig',{error:'Elija un nombre de usuario diferente'});
+
+    if(password!==confirmPassword)
+        return res.render('FirstConfig',{error:'La contraseña no coincide'});
+    
+    let query = "UPDATE config SET value = ? WHERE id= 'limitkm';";
+    let query2 ="UPDATE config SET value = ? WHERE id= 'mailto';";
+    let query3= "INSERT INTO  Usuarios(Usuario,Password,Admin) VALUES(?,?,0);";
+    db.run(query,[velocidadLimite])
+      .run(query2,[correos])
+      .run(query3,[username,password],(result,err)=>{
+        if(err){
+            throw err;
+        }
+
+        return res.redirect('/login');
+    });
+});
+
 
 app.get('/login',(req,res)=>{
     res.render('login');
@@ -61,15 +105,39 @@ app.get('/login',(req,res)=>{
 
 app.post('/login',(req,res)=>{
     const {username,password}=req.body;
+    
+    db.get("SELECT Usuario, Admin FROM Usuarios WHERE Usuario = ? AND Password= ?",[username,password],(err,row)=>{
+        if(err){
+            throw err;
+        }
 
-    if (username==='admin' && password==='PA$$w0rd'){
-        req.session.user={username,role:'admin'};
-        return res.redirect('/config');
-    }else if(username==='config' && password==='Adm1n2023$'){
-        req.session.user={username,role:'viewer'};
-        return res.redirect('/');
-    }
-    res.render('login',{error:'Credenciales incorrectas'});
+        if(!row.Usuario)
+        {
+            res.render('login',{error:'Credenciales incorrectas'});
+        }
+        else
+        {
+            if(row.Admin==1)
+            {
+                req.session.user={username,role:'admin'};
+                return res.redirect('/config');
+            }
+            else{
+                req.session.user={username,role:'viewer'};
+                return res.redirect('/');
+            }
+        }
+    });
+
+
+    // if (username==='admin'){
+    //     req.session.user={username,role:'admin'};
+    //     return res.redirect('/config');
+    // }else if(username==='config' && password==='Adm1n2023$'){
+    //     req.session.user={username,role:'viewer'};
+    //     return res.redirect('/');
+    // }
+    // res.render('login',{error:'Credenciales incorrectas'});
     //res.status(401).send('Credenciales incorrectas');
 });
 
@@ -357,5 +425,5 @@ app.get('/resetservice',isAuthenticated,(req,res)=>{
 
 const port=process.env.PORT ||  3000;
 app.listen(port,()=>{
-    console.log('Server is running on port ${port}');
+    console.log(`Server is running on port ${port}`);
 });
